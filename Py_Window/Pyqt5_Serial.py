@@ -3,98 +3,94 @@ import serial
 import serial.tools.list_ports
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QLabel, QComboBox, QPushButton, QMessageBox,
-                             QTextEdit, QLineEdit, QGroupBox, QCheckBox)
+                             QTextEdit, QLineEdit, QGroupBox, QGridLayout)
+
 
 class SerialPortApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
         self.serial = None
         self.is_serial_open = False
+        self.initUI()
 
     def initUI(self):
         self.setWindowTitle("串口调试助手")
-        self.setGeometry(100, 100, 800, 600)  # 主窗口大小
+        self.setGeometry(100, 100, 800, 600)
 
         main_layout = QHBoxLayout(self)
+        main_layout.addWidget(self.create_settings_group())
+        main_layout.addWidget(self.create_display_group())
+        main_layout.addLayout(self.create_send_grid())
 
-        # 左侧设置区域
+    def create_settings_group(self):
         settings_group = QGroupBox("COM口设置")
         settings_layout = QVBoxLayout()
 
-        # 添加选择框和标签
         self.com_combo = QComboBox()
         self.update_com_ports()
-        self.baudrate_combo = QComboBox()
-        self.baudrate_combo.addItems(["9600", "115200", "57600", "38400", "19200"])
-        self.databits_combo = QComboBox()
-        self.databits_combo.addItems(["5", "6", "7", "8"])
-        self.parity_combo = QComboBox()
-        self.parity_combo.addItems(["无", "奇", "偶"])
-        self.stopbits_combo = QComboBox()
-        self.stopbits_combo.addItems(["1", "1.5", "2"])
 
-        # 串口控制
+        self.baudrate_input = self.create_baudrate_input()
+        self.databits_combo = self.create_combo_box(["5", "6", "7", "8"])
+        self.parity_combo = self.create_combo_box(["无", "奇", "偶"])
+        self.stopbits_combo = self.create_combo_box(["1", "1.5", "2"])
+
         self.toggle_serial_button = QPushButton("打开串口")
         self.toggle_serial_button.clicked.connect(self.toggle_serial)
-        
-        
-        # 将控件放置到设置布局
-        settings_layout.addWidget(QLabel("COM口"))
-        settings_layout.addWidget(self.com_combo)
-        settings_layout.addWidget(QLabel("波特率"))
-        settings_layout.addWidget(self.baudrate_combo)
-        settings_layout.addWidget(QLabel("数据位"))
-        settings_layout.addWidget(self.databits_combo)
-        settings_layout.addWidget(QLabel("校验位"))
-        settings_layout.addWidget(self.parity_combo)
-        settings_layout.addWidget(QLabel("停止位"))
-        settings_layout.addWidget(self.stopbits_combo)
+
+        for label, widget in zip(["COM口", "波特率", "数据位", "校验位", "停止位"],
+                                 [self.com_combo, self.baudrate_input, self.databits_combo,
+                                  self.parity_combo, self.stopbits_combo]):
+            settings_layout.addWidget(QLabel(label))
+            settings_layout.addWidget(widget)
+
         settings_layout.addWidget(self.toggle_serial_button)
-
         settings_group.setLayout(settings_layout)
-        main_layout.addWidget(settings_group)
+        return settings_group
 
-        # 中间显示区域
-         # 中间显示区域
+    def create_baudrate_input(self):
+        baudrate_input = QLineEdit()
+        baudrate_input.setPlaceholderText("请输入波特率（如：9600）")
+        baudrate_input.setText("9600")
+        return baudrate_input
+
+    def create_display_group(self):
         display_group = QGroupBox("数据接收")
         display_layout = QVBoxLayout()
         self.display_box = QTextEdit()
         self.display_box.setReadOnly(True)
         display_layout.addWidget(self.display_box)
 
-        # 添加清空接收框按钮
         clear_button = QPushButton("清空接收框")
         clear_button.clicked.connect(self.clear_display)
-        
-        display_layout.addWidget(clear_button)  # 将清空按钮添加到布局
+        display_layout.addWidget(clear_button)
         display_group.setLayout(display_layout)
-        main_layout.addWidget(display_group)
+        return display_group
 
-        # 发送数据区域
+    def create_send_grid(self):
         send_group = QGroupBox("发送区")
-        send_layout = QVBoxLayout()
-        send_input_layout = QHBoxLayout()
+        grid_layout = QGridLayout()
 
-        self.send_input = QLineEdit()  
-        self.send_input.setMinimumWidth(300)  # 设置最小宽度
-        self.send_input.setMinimumHeight(200)  # 设置最小高度
+        self.send_input = QTextEdit()
+        self.send_input.setMinimumWidth(300)
+
         send_button = QPushButton("发送")
         send_button.clicked.connect(self.send_data)
-        send_input_layout.addWidget(self.send_input)
-        send_input_layout.addWidget(send_button)
 
-        send_layout.addLayout(send_input_layout)
-        send_group.setLayout(send_layout)
-        main_layout.addWidget(send_group)
+        grid_layout.addWidget(self.send_input, 0, 0)
+        grid_layout.addWidget(send_button, 0, 1)
 
+        grid_layout.addWidget(send_group, 0, 0, 1, 2)  # 发送区占一行
+        return grid_layout
 
+    def create_combo_box(self, items):
+        combo = QComboBox()
+        combo.addItems(items)
+        return combo
 
     def update_com_ports(self):
-        ports = serial.tools.list_ports.comports()
         self.com_combo.clear()
-        for port in ports:
-            self.com_combo.addItem(port.device)
+        ports = serial.tools.list_ports.comports()
+        self.com_combo.addItems([port.device for port in ports])
 
     def toggle_serial(self):
         if not self.is_serial_open:
@@ -103,38 +99,40 @@ class SerialPortApp(QWidget):
             self.close_serial()
 
     def open_serial(self):
-        com_port = self.com_combo.currentText()
-        baudrate = int(self.baudrate_combo.currentText())
-        databits = int(self.databits_combo.currentText())
-        parity = self.parity_combo.currentText()
-        stopbits = float(self.stopbits_combo.currentText())
-
-        parity_value = serial.PARITY_NONE
-        if parity == "奇":
-            parity_value = serial.PARITY_ODD
-        elif parity == "偶":
-            parity_value = serial.PARITY_EVEN
-
-        stopbits_value = serial.STOPBITS_ONE
-        if stopbits == 1.5:
-            stopbits_value = serial.STOPBITS_ONE_POINT_FIVE
-        elif stopbits == 2:
-            stopbits_value = serial.STOPBITS_TWO
-
         try:
-            self.serial = serial.Serial(
-                port=com_port,
-                baudrate=baudrate,
-                bytesize=databits,
-                parity=parity_value,
-                stopbits=stopbits_value
-            )
+            com_port = self.com_combo.currentText()
+            baudrate = int(self.baudrate_input.text())
+            databits = int(self.databits_combo.currentText())
+            parity = self.get_parity_value()
+            stopbits = self.get_stopbits_value()
+
+            self.serial = serial.Serial(port=com_port, baudrate=baudrate,
+                                        bytesize=databits, parity=parity,
+                                        stopbits=stopbits)
             self.is_serial_open = True
             self.toggle_serial_button.setText("关闭串口")
             self.toggle_serial_button.setStyleSheet("background-color: red;")
             QMessageBox.information(self, "成功", f"成功打开 {com_port}")
-        except Exception as e:
+        except (serial.SerialException, ValueError) as e:
             QMessageBox.critical(self, "错误", f"无法打开串口: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"未知错误: {str(e)}")
+
+    def get_parity_value(self):
+        parity_map = {
+            "无": serial.PARITY_NONE,
+            "奇": serial.PARITY_ODD,
+            "偶": serial.PARITY_EVEN
+        }
+        return parity_map.get(self.parity_combo.currentText(), serial.PARITY_NONE)
+
+    def get_stopbits_value(self):
+        stopbits_map = {
+            1: serial.STOPBITS_ONE,
+            1.5: serial.STOPBITS_ONE_POINT_FIVE,
+            2: serial.STOPBITS_TWO
+        }
+        return stopbits_map.get(float(self.stopbits_combo.currentText()), serial.STOPBITS_ONE)
 
     def close_serial(self):
         if self.serial and self.serial.is_open:
@@ -145,17 +143,20 @@ class SerialPortApp(QWidget):
             QMessageBox.information(self, "成功", "串口已关闭")
         else:
             QMessageBox.warning(self, "警告", "串口未打开")
-    
+
     def send_data(self):
         if self.serial and self.serial.is_open:
-            data = self.send_input.text()
-            self.serial.write(data.encode('utf-8'))
-            self.display_box.append(f"发送: {data}")
+            data = self.send_input.toPlainText()
+            if data:
+                self.serial.write(data.encode('utf-8'))
+                self.display_box.append(f"发送: {data}")
+            else:
+                QMessageBox.warning(self, "警告", "发送内容不能为空")
         else:
             QMessageBox.warning(self, "警告", "请先打开串口")
-            
+
     def clear_display(self):
-        self.display_box.clear()  # 清空接收框内容
+        self.display_box.clear()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
