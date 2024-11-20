@@ -1,29 +1,35 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QCheckBox, QLabel
 
-class MyWindow(QWidget):
+class MyApp(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.layout = QVBoxLayout()  # 主垂直布局
-        self.setLayout(self.layout)
+        self.initUI()
 
-        self.add_button = QPushButton("添加")
-        self.add_button.clicked.connect(self.add_horizontal_box)  # 连接按钮点击事件
-        self.layout.addWidget(self.add_button)  # 将添加按钮加入布局
+    def initUI(self):
+        self.setWindowTitle('勾选按钮示例')
+        self.setGeometry(100, 100, 300, 200)
 
-    def add_horizontal_box(self):
-        horizontal_layout = QHBoxLayout()  # 创建水平布局
-        line_edit = QLineEdit()  # 创建输入框
-        send_button = QPushButton("发送")  # 创建发送按钮
+        layout = QVBoxLayout()
 
-        horizontal_layout.addWidget(line_edit)  # 将输入框加入水平布局
-        horizontal_layout.addWidget(send_button)  # 将发送按钮加入水平布局
-        
-        self.layout.addLayout(horizontal_layout)  # 将水平布局加入主布局
+        self.checkbox = QCheckBox('我同意使用条款', self)
+        self.checkbox.stateChanged.connect(self.checkbox_changed)
+        layout.addWidget(self.checkbox)
+
+        self.label = QLabel('您是否同意使用条款？', self)
+        layout.addWidget(self.label)
+
+        self.setLayout(layout)
+
+    def checkbox_changed(self, state):
+        if state == 2:  # 选中状态
+            self.label.setText('您同意使用条款')
+        else:  # 未选中状态
+            self.label.setText('您是否同意使用条款？')
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = MyWindow()
-    window.setWindowTitle('动态添加控件示例')
-    window.show()
+    myApp = MyApp()
+    myApp.show()
     sys.exit(app.exec_())
