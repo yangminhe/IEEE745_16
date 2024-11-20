@@ -1,28 +1,29 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit
 
-def create_button(layout, text, row, column, rowspan=1, colspan=1):
-    """创建一个按钮并添加到布局中"""
-    button = QPushButton(text)
-    layout.addWidget(button, row, column, rowspan, colspan)
-    return button
+class MyWindow(QWidget):
+    def __init__(self):
+        super().__init__()
 
-app = QApplication(sys.argv)
-window = QWidget()
+        self.layout = QVBoxLayout()  # 主垂直布局
+        self.setLayout(self.layout)
 
-# 创建一个网格布局
-layout = QGridLayout()
+        self.add_button = QPushButton("添加")
+        self.add_button.clicked.connect(self.add_horizontal_box)  # 连接按钮点击事件
+        self.layout.addWidget(self.add_button)  # 将添加按钮加入布局
 
-# 使用封装的函数创建按钮并添加到布局中
-create_button(layout, 'Button 1', 0, 0)  # 添加到第0行第0列
-create_button(layout, 'Button 2', 0, 1)  # 添加到第0行第1列
-create_button(layout, 'Button 3', 1, 0, 1, 2)  # 从第1行第0列开始，跨越1行2列
-create_button(layout, 'Button 4', 0, 4)  # 添加到第0行第4列
-create_button(layout, 'Button 5', 2, 0, 2, 5)  # 添加到第2行第0列，跨越2行5列
+    def add_horizontal_box(self):
+        horizontal_layout = QHBoxLayout()  # 创建水平布局
+        line_edit = QLineEdit()  # 创建输入框
+        send_button = QPushButton("发送")  # 创建发送按钮
 
-window.setLayout(layout)
-window.setGeometry(300, 300, 300, 200)
-window.setWindowTitle('Grid Layout')
-window.show()
-
-sys.exit(app.exec_())
+        horizontal_layout.addWidget(line_edit)  # 将输入框加入水平布局
+        horizontal_layout.addWidget(send_button)  # 将发送按钮加入水平布局
+        
+        self.layout.addLayout(horizontal_layout)  # 将水平布局加入主布局
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MyWindow()
+    window.setWindowTitle('动态添加控件示例')
+    window.show()
+    sys.exit(app.exec_())

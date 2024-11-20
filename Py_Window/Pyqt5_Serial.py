@@ -67,20 +67,31 @@ class SerialPortApp(QWidget):
         return display_group
 
     def create_send_grid(self):
-        send_group = QGroupBox("发送区")
-        grid_layout = QGridLayout()
-
+        self.grid_layout = QGridLayout()
+        self.row_count = 0
+        self.add_send_row()
         self.send_input = QTextEdit()
-        self.send_input.setMinimumWidth(300)
-
+        self.send_button = QPushButton("发送")
+        self.add_button = QPushButton("+")
+        # send_button.clicked.connect(self.send_data)
+        self.grid_layout.addWidget(self.send_input, 0, 2)
+        self.grid_layout.addWidget(self.send_button, 0, 1)
+        self.add_button.clicked.connect(self.add_send_row)
+        self.grid_layout.addWidget(self.add_button,0, 0)
+        return self.grid_layout
+    
+    
+    def add_send_row(self) ->None:
+        send_input = QTextEdit()
         send_button = QPushButton("发送")
-        send_button.clicked.connect(self.send_data)
+        # send_button.clicked.connect(self.send_data)
+        if self.row_count < 3:
+            self.grid_layout.addWidget(send_button, self.row_count, 1)  
+            self.grid_layout.addWidget(send_input, self.row_count, 2)  
+            self.row_count += 1 
+        else:
+            QMessageBox.critical(self, "错误", f"最多只能添加3个发送框")
 
-        grid_layout.addWidget(self.send_input, 0, 0)
-        grid_layout.addWidget(send_button, 0, 1)
-
-        grid_layout.addWidget(send_group, 0, 0, 1, 2)  # 发送区占一行
-        return grid_layout
 
     def create_combo_box(self, items):
         combo = QComboBox()
