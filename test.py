@@ -1,5 +1,4 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QCheckBox, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
 
 class MyApp(QWidget):
     def __init__(self):
@@ -8,28 +7,19 @@ class MyApp(QWidget):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle('勾选按钮示例')
-        self.setGeometry(100, 100, 300, 200)
-
         layout = QVBoxLayout()
 
-        self.checkbox = QCheckBox('我同意使用条款', self)
-        self.checkbox.stateChanged.connect(self.checkbox_changed)
-        layout.addWidget(self.checkbox)
+        self.button = QPushButton('点击我')
+        self.button.clicked.connect(self.on_button_click)  # 连接点击事件到槽函数
 
-        self.label = QLabel('您是否同意使用条款？', self)
-        layout.addWidget(self.label)
-
+        layout.addWidget(self.button)
         self.setLayout(layout)
-
-    def checkbox_changed(self, state):
-        if state == 2:  # 选中状态
-            self.label.setText('您同意使用条款')
-        else:  # 未选中状态
-            self.label.setText('您是否同意使用条款？')
+    def on_button_click(self):
+        print("按钮被点击了！")  # 处理按钮点击事件的代码
 
 if __name__ == '__main__':
+    import sys
     app = QApplication(sys.argv)
-    myApp = MyApp()
-    myApp.show()
+    ex = MyApp()
+    ex.show()
     sys.exit(app.exec_())
