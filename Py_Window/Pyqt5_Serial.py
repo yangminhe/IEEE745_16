@@ -3,7 +3,7 @@ import serial
 import serial.tools.list_ports
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
                              QLabel, QComboBox, QPushButton, QMessageBox,
-                             QTextEdit, QLineEdit, QGroupBox, QGridLayout)
+                             QTextEdit, QLineEdit, QGroupBox, QGridLayout,QCheckBox)
 
 
 class SerialPortApp(QWidget):
@@ -66,17 +66,24 @@ class SerialPortApp(QWidget):
         return display_group
 
     def create_send_grid(self) -> QGridLayout:
+        
+        self.row_count = 2
         self.grid_layout = QGridLayout()
-        self.row_count = 1
-        self.send_buttons = []  # 存储发送按钮对应的输入框
-
         self.send_input = QLineEdit()
-        self.grid_layout.addWidget(self.send_input, 0, 2)
-        self.grid_layout.addWidget(QPushButton("发送"), 0, 1)  # 仅需要一个固定的发送按钮
+        self.verify_box=QComboBox()
+        self.verify_box.addItems(["CRC-16/MODBUS", "LRC"])
+        self.verify_box.setCurrentIndex(0)
+        self.verify_checkbox = QCheckBox("自动校验")
+        self.time_checkbox = QCheckBox("定时发送")
         self.add_button = QPushButton("+")
         self.add_button.clicked.connect(self.add_send_row)
-        self.grid_layout.addWidget(self.add_button, 0, 0)
-
+        
+        self.grid_layout.addWidget(self.verify_box, 0, 2)
+        self.grid_layout.addWidget(self.verify_checkbox, 0, 1)
+        self.grid_layout.addWidget(self.time_checkbox, 0, 0)
+        self.grid_layout.addWidget(self.add_button, 1, 0)
+        self.grid_layout.addWidget(QPushButton("发送"), 1, 1)
+        self.grid_layout.addWidget(self.send_input, 1, 2)
         return self.grid_layout
 
     def add_send_row(self) -> None:
@@ -84,21 +91,29 @@ class SerialPortApp(QWidget):
             self.send_input = QLineEdit()
             self.send_button = QPushButton("发送")
             self.remove_button = QPushButton("-")
-            # self.send_button.clicked.connect(lambda: self.send_data(self.send_input))
-            self.remove_button.clicked.connect(lambda: self.remove_send_row())
-            
+            self.grid_layout.addWidget(self.remove_button,self.row_count, 0)
             self.grid_layout.addWidget(self.send_button, self.row_count, 1)
             self.grid_layout.addWidget(self.send_input, self.row_count, 2)
-            self.grid_layout.addWidget(self.remove_button,self.row_count, 0)
             self.row_count += 1
+            self.remove_button.clicked.connect(self.send_button.deleteLater)
+            self.remove_button.clicked.connect(self.send_input.deleteLater)
+            self.remove_button.clicked.connect(self.remove_button.deleteLater)
+            self.remove_button.clicked.connect(self.remove_send_row)
+
         else:
-            QMessageBox.critical(self, "错误", "最多只能添加3个发送框")
+            QMessageBox.warning(self, "错误", "最多只能添加2个发送框")
+    
+    def remove_send_row(self) -> None:
+        self.row_count -= 1
+        print(self.row_count)
+        
 
+            
         
 
 
+     
 
-        
     def create_combo_box(self, items) -> QComboBox:
         combo = QComboBox()
         combo.addItems(items)

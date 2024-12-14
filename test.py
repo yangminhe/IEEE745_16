@@ -1,25 +1,42 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QCheckBox, QVBoxLayout, QLabel
 
-class MyApp(QWidget):
+class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-
         self.initUI()
 
     def initUI(self):
+        # 创建一个垂直布局
         layout = QVBoxLayout()
 
-        self.button = QPushButton('点击我')
-        self.button.clicked.connect(self.on_button_click)  # 连接点击事件到槽函数
+        # 创建复选框
+        self.checkBox = QCheckBox('启用选项', self)
+        self.checkBox.stateChanged.connect(self.onCheckBoxChanged)
 
-        layout.addWidget(self.button)
+        # 创建一个标签用于显示复选框的状态
+        self.label = QLabel('状态：未选中', self)
+
+        # 将复选框和标签添加到布局中
+        layout.addWidget(self.checkBox)
+        layout.addWidget(self.label)
+
+        # 设置窗口的布局
         self.setLayout(layout)
-    def on_button_click(self):
-        print("按钮被点击了！")  # 处理按钮点击事件的代码
+
+        # 设置窗口标题和大小
+        self.setWindowTitle('PyQt5 复选框示例')
+        self.setGeometry(300, 300, 250, 150)
+
+    def onCheckBoxChanged(self, state):
+        # 检测复选框的状态并更新标签
+        if state == Qt.Checked:
+            self.label.setText('状态：已选中')
+        else:
+            self.label.setText('状态：未选中')
 
 if __name__ == '__main__':
-    import sys
     app = QApplication(sys.argv)
-    ex = MyApp()
-    ex.show()
+    mainWin = MainWindow()
+    mainWin.show()
     sys.exit(app.exec_())
